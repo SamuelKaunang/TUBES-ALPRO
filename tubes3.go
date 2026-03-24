@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -23,15 +26,32 @@ type Booking struct {
 
 var bookings []Booking
 
+func readString(reader *bufio.Reader) string {
+	input, _ := reader.ReadString('\n')
+	return strings.TrimSpace(input)
+}
+
+func readInt(reader *bufio.Reader) (int, error) {
+	strInput := readString(reader)
+	return strconv.Atoi(strInput)
+}
+
 func main() {
+	reader := bufio.NewReader(os.Stdin)
+
 	for {
-		var choice int
-		fmt.Println("Menu:")
+		fmt.Println("\nMenu:")
 		fmt.Println("1. Penerbangan Domestik")
 		fmt.Println("2. Penerbangan Internasional")
 		fmt.Println("3. Keluar")
 		fmt.Print("Pilih menu: ")
-		fmt.Scan(&choice)
+
+		choice, err := readInt(reader)
+		if err != nil {
+			fmt.Println("Pilihan tidak valid. Silakan coba lagi.")
+			time.Sleep(2 * time.Second)
+			continue
+		}
 
 		if choice == 3 {
 			fmt.Println("Terima kasih telah menggunakan layanan kami.")
@@ -50,7 +70,7 @@ func main() {
 		} else if choice == 2 {
 			fmt.Print("Masukkan tujuan penerbangan internasional: ")
 		}
-		fmt.Scan(&destination)
+		destination = readString(reader)
 
 		flights := getFlights(destination)
 		if len(flights) == 0 {
@@ -59,16 +79,19 @@ func main() {
 			continue
 		}
 
-		fmt.Println("Daftar penerbangan:")
+		fmt.Println("\nDaftar penerbangan:")
 		printFlights(flights)
 
-		var sortChoice int
-		fmt.Println("Menu Sorting:")
+		fmt.Println("\nMenu Sorting:")
 		fmt.Println("1. Termurah ke Termahal")
 		fmt.Println("2. Termahal ke Termurah")
 		fmt.Println("3. Berdasarkan Waktu Keberangkatan")
 		fmt.Print("Pilih menu sorting: ")
-		fmt.Scan(&sortChoice)
+
+		sortChoice, err := readInt(reader)
+		if err != nil {
+			sortChoice = 0 
+		}
 
 		switch sortChoice {
 		case 1:
@@ -89,34 +112,31 @@ func main() {
 			continue
 		}
 
-		fmt.Println("Daftar penerbangan setelah sorting:")
+		fmt.Println("\nDaftar penerbangan setelah sorting:")
 		printFlights(flights)
 
-		var flightChoice int
 		fmt.Print("Pilih penerbangan (nomor): ")
-		fmt.Scan(&flightChoice)
-		if flightChoice < 1 || flightChoice > len(flights) {
+		flightChoice, err := readInt(reader)
+		if err != nil || flightChoice < 1 || flightChoice > len(flights) {
 			fmt.Println("Pilihan tidak valid. Silakan coba lagi.")
 			time.Sleep(2 * time.Second)
 			continue
 		}
 
 		flight := flights[flightChoice-1]
-		fmt.Printf("Detail penerbangan yang dipilih:\nMaskapai: %s\nHarga: Rp%d\nKeberangkatan: %s\nKedatangan: %s\nDurasi: %s\n",
+		fmt.Printf("\nDetail penerbangan yang dipilih:\nMaskapai: %s\nHarga: Rp%d\nKeberangkatan: %s\nKedatangan: %s\nDurasi: %s\n",
 			flight.Airline, flight.Price, flight.Departure, flight.Arrival, flight.FlightTime)
 
-		var confirm string
-		fmt.Print("Apakah Anda ingin melanjutkan dengan penerbangan ini? (yes/no): ")
-		fmt.Scan(&confirm)
+		fmt.Print("\nApakah Anda ingin melanjutkan dengan penerbangan ini? (yes/no): ")
+		confirm := readString(reader)
 		if strings.ToLower(confirm) != "yes" {
 			fmt.Println("Pemesanan dibatalkan.")
 			time.Sleep(2 * time.Second)
 			continue
 		}
 
-		var name string
 		fmt.Print("Masukkan nama Anda: ")
-		fmt.Scan(&name)
+		name := readString(reader)
 
 		booking := Booking{
 			Name:        name,
@@ -130,8 +150,8 @@ func main() {
 	}
 }
 
+
 func getFlights(destination string) []Flight {
-	// Dummy data, biasanya ini akan diambil dari database atau API
 	return []Flight{
 		{"Garuda Indonesia", 1500000, "08:00", "10:00", "2h"},
 		{"Lion Air", 900000, "09:00", "11:00", "2h"},
